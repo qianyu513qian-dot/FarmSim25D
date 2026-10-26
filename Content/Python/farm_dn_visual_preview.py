@@ -15,4 +15,5 @@ pawn = unreal.GameplayStatics.get_player_pawn(world,0)
 arm = pawn.get_component_by_class(unreal.SpringArmComponent)
 cam = pawn.get_component_by_class(unreal.CameraComponent)
 if 'location' in request: pawn.set_actor_location(unreal.Vector(*request['location']),False,False)
+if 'review_arm_length' in request: arm.set_editor_property('target_arm_length',float(request['review_arm_length']))
 REPORT = {'camera_rotation':str(cam.get_world_rotation()),'ortho_width':cam.ortho_width,'pawn':str(pawn.get_actor_location()),'hour':request.get('hour',12)}

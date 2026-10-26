@@ -22,4 +22,7 @@ private:
     UPROPERTY(Transient) TObjectPtr<UTextBlock> TimeLabel;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> StatusLabel;
     UPROPERTY(Transient) TObjectPtr<UProgressBar> DayProgress;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> MoneyLabel;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> SeedsLabel;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> CropsLabel;
 };
