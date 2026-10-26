@@ -1,0 +1,29 @@
+﻿# Unreal Engine
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Build/
+*.VC.db
+*.opensdf
+*.opendb
+*.sdf
+*.sln
+*.suo
+*.xcodeproj
+*.xcworkspace
+.vs/
+*.user
+*.userprefs
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local Python cache
+Content/Python/__pycache__/
+*.pyc
+
+# Large local caches (keep Content)
+*.log

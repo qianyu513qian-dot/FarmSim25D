@@ -1,0 +1,200 @@
+=== Step A2 deep ===
+ACTOR SkyAtmosphere label='SkyAtmosphere' tags=[]
+ACTOR SkyLight label='SkyLight' tags=[]
+ACTOR DirectionalLight label='SunLight' tags=['FarmSun']
+  color struct=<Struct 'Color' (0x000002B71C70E6B8) {b: 255, g: 240, r: 199, a: 255}> type=<class 'Color'>
+  color.r=199
+  color.g=240
+  color.b=255
+  inten=6.0 atm=True idx=0 mob=<ComponentMobility.MOVABLE: 2>
+ACTOR DirectionalLight label='MoonLight' tags=['FarmMoon']
+  color struct=<Struct 'Color' (0x000002B7E7D1D4B8) {b: 140, g: 166, r: 242, a: 255}> type=<class 'Color'>
+  color.r=242
+  color.g=166
+  color.b=140
+  inten=0.0 atm=True idx=1 mob=<ComponentMobility.MOVABLE: 2>
+VAR SunActor present=True
+VAR MoonActor present=True
+VAR SkyLightActor present=True
+VAR TimeOfDay present=True
+VAR CurrentDay present=True
+VAR DayLengthSeconds present=True
+Apply exec chain from entry:
+  -> Branch [K2Node_IfThenElse]
+  -> Set Actor Rotation [K2Node_CallFunction]
+  -> SetIntensity [K2Node_CallFunction]
+  -> SetLightColor [K2Node_CallFunction]
+  -> Branch [K2Node_IfThenElse]
+  -> Set Actor Rotation [K2Node_CallFunction]
+  -> SetIntensity [K2Node_CallFunction]
+  -> SetLightColor [K2Node_CallFunction]
+  -> Branch [K2Node_IfThenElse]
+  -> Return Node [K2Node_FunctionResult]
+--- key data links ---
+NODE Get TimeOfDay
+  TimeOfDay (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> A @ float - float
+  TimeOfDay (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> A @ float * float
+NODE float * float
+  A (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ float - float
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> A @ Sin (Radians)
+NODE Sin (Radians)
+  A (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ float * float
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Value @ MapRangeClamped
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Value @ MapRangeClamped
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Value @ MapRangeClamped
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Value @ MapRangeClamped
+NODE MapRangeClamped
+  Value (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ Sin (Radians)
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> NewIntensity @ SetIntensity
+NODE MapRangeClamped
+  Value (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ Sin (Radians)
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> NewIntensity @ SetIntensity
+NODE MapRangeClamped
+  Value (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ Sin (Radians)
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Pitch @ MakeRotator
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Pitch @ MakeRotator
+NODE float * float
+  A (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> TimeOfDay @ Get TimeOfDay
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> A @ float + float
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Yaw @ MakeRotator
+NODE float + float
+  A (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ float * float
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Yaw @ MakeRotator
+NODE MakeColor
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> NewLightColor @ SetLightColor
+NODE MakeColor
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> NewLightColor @ SetLightColor
+NODE MakeRotator
+  Pitch (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ MapRangeClamped
+  Yaw (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ float * float
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> NewRotation @ Set Actor Rotation
+NODE MakeRotator
+  Pitch (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ MapRangeClamped
+  Yaw (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ float + float
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> NewRotation @ Set Actor Rotation
+NODE Get SunActor
+  SunActor (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Object @ IsValid
+  SunActor (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> self @ Set Actor Rotation
+  SunActor (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> self @ GetComponentByClass
+NODE IsValid
+  Object (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> SunActor @ Get SunActor
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Condition @ Branch
+NODE Branch
+  execute (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> then @ ApplyDayNightVisuals
+  Condition (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ IsValid
+  then (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ Set Actor Rotation
+  else (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ Branch
+NODE Set Actor Rotation
+  execute (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> then @ Branch
+  self (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> SunActor @ Get SunActor
+  NewRotation (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ MakeRotator
+  then (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ SetIntensity
+NODE GetComponentByClass
+  self (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> SunActor @ Get SunActor
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> self @ SetIntensity
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> self @ SetLightColor
+NODE SetIntensity
+  execute (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> then @ Set Actor Rotation
+  self (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ GetComponentByClass
+  NewIntensity (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ MapRangeClamped
+  then (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ SetLightColor
+NODE SetLightColor
+  execute (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> then @ SetIntensity
+  self (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ GetComponentByClass
+  NewLightColor (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ MakeColor
+  then (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ Branch
+NODE Get MoonActor
+  MoonActor (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Object @ IsValid
+  MoonActor (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> self @ Set Actor Rotation
+  MoonActor (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> self @ GetComponentByClass
+NODE IsValid
+  Object (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> MoonActor @ Get MoonActor
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Condition @ Branch
+NODE Branch
+  execute (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> then @ SetLightColor
+  execute (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> else @ Branch
+  Condition (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ IsValid
+  then (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ Set Actor Rotation
+  else (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ Branch
+NODE Set Actor Rotation
+  execute (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> then @ Branch
+  self (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> MoonActor @ Get MoonActor
+  NewRotation (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ MakeRotator
+  then (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ SetIntensity
+NODE GetComponentByClass
+  self (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> MoonActor @ Get MoonActor
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> self @ SetIntensity
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> self @ SetLightColor
+NODE SetIntensity
+  execute (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> then @ Set Actor Rotation
+  self (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ GetComponentByClass
+  NewIntensity (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ MapRangeClamped
+  then (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ SetLightColor
+NODE SetLightColor
+  execute (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> then @ SetIntensity
+  self (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ GetComponentByClass
+  NewLightColor (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ MakeColor
+  then (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ Branch
+NODE MapRangeClamped
+  Value (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ Sin (Radians)
+NODE Get SkyLightActor
+  SkyLightActor (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Object @ IsValid
+NODE IsValid
+  Object (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> SkyLightActor @ Get SkyLightActor
+  ReturnValue (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> Condition @ Branch
+NODE Branch
+  execute (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> then @ SetLightColor
+  execute (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> else @ Branch
+  Condition (<EdGraphPinDirection.EGPD_INPUT: 0>) <-> ReturnValue @ IsValid
+  then (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ Return Node
+  else (<EdGraphPinDirection.EGPD_OUTPUT: 1>) <-> execute @ Return Node
+--- EventGraph light assign ---
+EG Set SunActor
+  pin execute val='' links=['then@GetAllActorsWithTag']
+  pin SunActor val='' links=['Item@Get']
+  pin then val='' links=['execute@GetAllActorsOfClass']
+EG GetAllActorsOfClass
+  pin execute val='' links=['then@Set SunActor']
+  pin ActorClass val='/Script/Engine.SkyLight' links=[]
+  pin then val='' links=['execute@Set SkyLightActor']
+  pin OutActors val='' links=['TargetArray@Get']
+EG Set SkyLightActor
+  pin execute val='' links=['then@GetAllActorsOfClass']
+  pin SkyLightActor val='' links=['Item@Get']
+  pin then val='' links=['execute@GetAllActorsWithTag']
+EG GetAllActorsWithTag
+  pin execute val='' links=['then@InitBlockedFromIndices']
+  pin Tag val='FarmSun' links=[]
+  pin then val='' links=['execute@Set SunActor']
+  pin OutActors val='' links=['TargetArray@Get']
+EG GetAllActorsWithTag
+  pin execute val='' links=['then@Set SkyLightActor']
+  pin Tag val='FarmMoon' links=[]
+  pin then val='' links=['execute@Set MoonActor']
+  pin OutActors val='' links=['TargetArray@Get']
+EG Set MoonActor
+  pin execute val='' links=['then@GetAllActorsWithTag']
+  pin MoonActor val='' links=['Item@Get']
+  pin then val='' links=['execute@Set CurrentDay']
+--- node positions (x,y) ---
+  pos=(1100,40) MapRangeClamped
+  pos=(1100,220) MapRangeClamped
+  pos=(1100,400) MapRangeClamped
+  pos=(1450,200) MakeRotator
+  pos=(1450,420) MakeRotator
+  pos=(1450,40) Get SunActor
+  pos=(1680,40) IsValid
+  pos=(1920,0) Branch
+  pos=(2180,0) Set Actor Rotation
+  pos=(2520,0) SetIntensity
+  pos=(2820,0) SetLightColor
+  pos=(2820,280) Get MoonActor
+  pos=(3050,280) IsValid
+  pos=(3280,0) Branch
+  pos=(3540,0) Set Actor Rotation
+  pos=(3880,0) SetIntensity
+  pos=(4180,0) SetLightColor
+  pos=(3880,400) MapRangeClamped
+  pos=(4180,280) Get SkyLightActor
+  pos=(4400,280) IsValid
+  pos=(4620,0) Branch

@@ -1,0 +1,109 @@
+=== Step A probe START ===
+--- Level lights/sky ---
+ACTOR cls=SkyAtmosphere label='SkyAtmosphere' name='SkyAtmosphere_0'
+ACTOR cls=SkyLight label='SkyLight' name='SkyLight_0'
+  Sky intensity=0.699999988079071
+ACTOR cls=VolumetricCloud label='VolumetricCloud' name='VolumetricCloud_0'
+ACTOR cls=DirectionalLight label='SunLight' name='DirectionalLight_0'
+  DL intensity=6.0 color=<Struct 'Color' (0x000002B71C70E6B8) {b: 255, g: 240, r: 199, a: 255}> atmSun=True atmIdx=0
+ACTOR cls=ExponentialHeightFog label='ExponentialHeightFog' name='ExponentialHeightFog_0'
+ACTOR cls=DirectionalLight label='MoonLight' name='DirectionalLight_UAID_08BFB8026ECCD40E03_1837825927'
+  DL intensity=0.0 color=<Struct 'Color' (0x000002B7E7D1D4B8) {b: 140, g: 166, r: 242, a: 255}> atmSun=True atmIdx=1
+--- BP_GridManager variables ---
+vars via introduced: type object 'BlueprintEditorLibrary' has no attribute 'get_introduced_variables'
+vars fail: 'Blueprint' object has no attribute 'new_variables'
+--- ApplyDayNightVisuals nodes ---
+node_count=34
+NODE [K2Node_FunctionEntry] ApplyDayNightVisuals
+NODE [K2Node_VariableGet] Get TimeOfDay
+  pin TimeOfDay <EdGraphPinDirection.EGPD_OUTPUT: 1> val='0.0' links=[]
+NODE [K2Node_PromotableOperator] float - float
+NODE [K2Node_PromotableOperator] float * float
+NODE [K2Node_CallFunction] Sin (Radians)
+  pin A <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin ReturnValue <EdGraphPinDirection.EGPD_OUTPUT: 1> val='0.0' links=[]
+NODE [K2Node_CallFunction] MapRangeClamped
+  pin Value <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin InRangeA <EdGraphPinDirection.EGPD_INPUT: 0> val='-0.15' links=[]
+  pin InRangeB <EdGraphPinDirection.EGPD_INPUT: 0> val='0.4' links=[]
+  pin OutRangeA <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin OutRangeB <EdGraphPinDirection.EGPD_INPUT: 0> val='8.0' links=[]
+  pin ReturnValue <EdGraphPinDirection.EGPD_OUTPUT: 1> val='0.0' links=[]
+NODE [K2Node_CallFunction] MapRangeClamped
+  pin Value <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin InRangeA <EdGraphPinDirection.EGPD_INPUT: 0> val='0.15' links=[]
+  pin InRangeB <EdGraphPinDirection.EGPD_INPUT: 0> val='-0.4' links=[]
+  pin OutRangeA <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin OutRangeB <EdGraphPinDirection.EGPD_INPUT: 0> val='2.5' links=[]
+  pin ReturnValue <EdGraphPinDirection.EGPD_OUTPUT: 1> val='0.0' links=[]
+NODE [K2Node_CallFunction] MapRangeClamped
+  pin Value <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin InRangeA <EdGraphPinDirection.EGPD_INPUT: 0> val='-1.0' links=[]
+  pin InRangeB <EdGraphPinDirection.EGPD_INPUT: 0> val='1.0' links=[]
+  pin OutRangeA <EdGraphPinDirection.EGPD_INPUT: 0> val='25.0' links=[]
+  pin OutRangeB <EdGraphPinDirection.EGPD_INPUT: 0> val='-70.0' links=[]
+  pin ReturnValue <EdGraphPinDirection.EGPD_OUTPUT: 1> val='0.0' links=[]
+NODE [K2Node_PromotableOperator] float * float
+NODE [K2Node_PromotableOperator] float + float
+NODE [K2Node_CallFunction] MakeColor
+NODE [K2Node_CallFunction] MakeColor
+NODE [K2Node_CallFunction] MakeRotator
+  pin Roll <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin Pitch <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin Yaw <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin ReturnValue <EdGraphPinDirection.EGPD_OUTPUT: 1> val='0, 0, 0' links=[]
+NODE [K2Node_CallFunction] MakeRotator
+  pin Roll <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin Pitch <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin Yaw <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin ReturnValue <EdGraphPinDirection.EGPD_OUTPUT: 1> val='0, 0, 0' links=[]
+NODE [K2Node_VariableGet] Get SunActor
+NODE [K2Node_CallFunction] IsValid
+  pin ReturnValue <EdGraphPinDirection.EGPD_OUTPUT: 1> val='false' links=[]
+NODE [K2Node_IfThenElse] Branch
+  pin Condition <EdGraphPinDirection.EGPD_INPUT: 0> val='true' links=[]
+NODE [K2Node_CallFunction] Set Actor Rotation
+NODE [K2Node_CallFunction] GetComponentByClass
+  pin ComponentClass <EdGraphPinDirection.EGPD_INPUT: 0> val='/Script/Engine.DirectionalLightComponent' links=[]
+NODE [K2Node_CallFunction] SetIntensity
+  pin NewIntensity <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+NODE [K2Node_CallFunction] SetLightColor
+  pin bSRGB <EdGraphPinDirection.EGPD_INPUT: 0> val='true' links=[]
+NODE [K2Node_VariableGet] Get MoonActor
+NODE [K2Node_CallFunction] IsValid
+  pin ReturnValue <EdGraphPinDirection.EGPD_OUTPUT: 1> val='false' links=[]
+NODE [K2Node_IfThenElse] Branch
+  pin Condition <EdGraphPinDirection.EGPD_INPUT: 0> val='true' links=[]
+NODE [K2Node_CallFunction] Set Actor Rotation
+NODE [K2Node_CallFunction] GetComponentByClass
+  pin ComponentClass <EdGraphPinDirection.EGPD_INPUT: 0> val='/Script/Engine.DirectionalLightComponent' links=[]
+NODE [K2Node_CallFunction] SetIntensity
+  pin NewIntensity <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+NODE [K2Node_CallFunction] SetLightColor
+  pin bSRGB <EdGraphPinDirection.EGPD_INPUT: 0> val='true' links=[]
+NODE [K2Node_CallFunction] MapRangeClamped
+  pin Value <EdGraphPinDirection.EGPD_INPUT: 0> val='0.0' links=[]
+  pin InRangeA <EdGraphPinDirection.EGPD_INPUT: 0> val='-1.0' links=[]
+  pin InRangeB <EdGraphPinDirection.EGPD_INPUT: 0> val='1.0' links=[]
+  pin OutRangeA <EdGraphPinDirection.EGPD_INPUT: 0> val='0.6' links=[]
+  pin OutRangeB <EdGraphPinDirection.EGPD_INPUT: 0> val='1.2' links=[]
+  pin ReturnValue <EdGraphPinDirection.EGPD_OUTPUT: 1> val='0.0' links=[]
+NODE [K2Node_VariableGet] Get SkyLightActor
+NODE [K2Node_CallFunction] IsValid
+  pin ReturnValue <EdGraphPinDirection.EGPD_OUTPUT: 1> val='false' links=[]
+NODE [K2Node_IfThenElse] Branch
+  pin Condition <EdGraphPinDirection.EGPD_INPUT: 0> val='true' links=[]
+NODE [K2Node_FunctionResult] Return Node
+NODE [K2Node_FunctionResult] Return Node
+errors=0
+--- AdvanceDayGrowth quick ---
+ADG NODE Equal (Byte)
+  Equal.B='3'
+ADG NODE VisualizeCell
+--- EventGraph / BeginPlay light-related ---
+EG NODE [K2Node_VariableSet] Set SunActor
+EG NODE [K2Node_CallFunction] GetAllActorsOfClass
+EG NODE [K2Node_VariableSet] Set SkyLightActor
+EG NODE [K2Node_CallFunction] GetAllActorsWithTag
+EG NODE [K2Node_CallFunction] GetAllActorsWithTag
+EG NODE [K2Node_VariableSet] Set MoonActor
