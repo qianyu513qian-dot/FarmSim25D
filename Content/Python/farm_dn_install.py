@@ -77,7 +77,7 @@ pp.set_editor_property('unbound',True)
 pp.modify()
 pp.set_editor_property('priority',10.0)
 settings=pp.get_editor_property('settings')
-for name,value in [('override_auto_exposure_min_brightness',True),('override_auto_exposure_max_brightness',True),('auto_exposure_min_brightness',0.0),('auto_exposure_max_brightness',0.0),('override_auto_exposure_bias',True),('auto_exposure_bias',0.0),('override_bloom_intensity',True),('bloom_intensity',0.18),('override_vignette_intensity',True),('vignette_intensity',0.15),('ambient_cubemap',unreal.load_asset('/Engine/MapTemplates/Sky/DaylightAmbientCubemap'))]:
+for name,value in [('override_auto_exposure_min_brightness',True),('override_auto_exposure_max_brightness',True),('auto_exposure_min_brightness',0.0),('auto_exposure_max_brightness',0.0),('override_auto_exposure_bias',True),('auto_exposure_bias',0.0),('override_bloom_intensity',True),('bloom_intensity',0.0),('override_vignette_intensity',True),('vignette_intensity',0.15),('ambient_cubemap',unreal.load_asset('/Engine/MapTemplates/Sky/DaylightAmbientCubemap'))]:
     settings.set_editor_property(name,value)
 pp.set_editor_property('settings',settings)
 pp.set_editor_property('is_spatially_loaded',False)

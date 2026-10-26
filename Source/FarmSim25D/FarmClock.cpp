@@ -32,10 +32,12 @@ AFarmClock::AFarmClock()
     Key(0,0,0.38f,2.2f,1,FLinearColor(1,0.55f,0.3f),Night);
     Key(5,0,0.38f,0.8f,1,FLinearColor(1,0.55f,0.3f),Night);
     Key(6,1.8f,0.65f,0.12f,0.4f,FLinearColor(1,0.64f,0.4f),FLinearColor(0.72f,0.76f,0.9f));
-    Key(8,6.5f,1.15f,0,0,FLinearColor(1,0.88f,0.7f),Day);
-    Key(12,8,1.25f,0,0,FLinearColor(1,0.95f,0.84f),Day);
-    Key(16,7,1.15f,0,0,FLinearColor(1,0.87f,0.65f),Day);
-    Key(18,3.2f,0.8f,0.05f,0.25f,FLinearColor(1,0.48f,0.2f),FLinearColor(0.85f,0.61f,0.67f));
+    // Stylized palette at locked EV100=0: keep midday out of the tonemapper's
+    // compressed highlights instead of lowering exposure (which also crushes night).
+    Key(8,1.8f,1.0f,0,0,FLinearColor(1,0.88f,0.7f),Day);
+    Key(12,2.1f,1.05f,0,0,FLinearColor(1,0.95f,0.84f),Day);
+    Key(16,1.9f,1.0f,0,0,FLinearColor(1,0.87f,0.65f),Day);
+    Key(18,1.5f,0.8f,0.05f,0.25f,FLinearColor(1,0.48f,0.2f),FLinearColor(0.85f,0.61f,0.67f));
     Key(19.5f,0.25f,0.42f,0.8f,1,FLinearColor(1,0.3f,0.12f),FLinearColor(0.47f,0.48f,0.75f));
     Key(21,0,0.38f,2.2f,1,FLinearColor(1,0.3f,0.12f),Night);
     Key(24,0,0.38f,2.2f,1,FLinearColor(1,0.3f,0.12f),Night);
@@ -302,7 +304,9 @@ void AFarmClock::ApplyLighting(float Hour)
         auto& S=AmbientGrade->Settings;
         S.bOverride_AmbientCubemapIntensity=true;
         S.bOverride_AmbientCubemapTint=true;
-        S.AmbientCubemapIntensity=FMath::Lerp(0.65f,0.25f,LampBlend);
+        // Skylight owns environment illumination; this is only a subtle fill.
+        // Preserve the previously tuned night fill without stacking extra daytime light.
+        S.AmbientCubemapIntensity=0.25f;
         S.AmbientCubemapTint=FMath::Lerp(FLinearColor(0.84f,0.9f,1),FLinearColor(0.28f,0.42f,0.8f),LampBlend);
     }
     if (IsValid(LightingParameters))
