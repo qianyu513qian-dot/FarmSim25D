@@ -1,6 +1,7 @@
 #include "FarmClock.h"
 #include "FarmClockWidget.h"
 #include "FarmPauseWidget.h"
+// AFarmSeedShop declared in FarmPauseWidget.h
 #include "Engine/DirectionalLight.h"
 #include "Engine/SkyLight.h"
 #include "Engine/PointLight.h"
@@ -169,6 +170,7 @@ void AFarmClock::ApplyPausePresentation(bool bPaused)
 
 void AFarmClock::TogglePause()
 {
+	if (AFarmSeedShop::CloseAnyOpenShop(GetWorld())) return;
     if (bEndingDay) return;
     bPausedByClock = !bPausedByClock;
     SetClockPaused(bPausedByClock);
@@ -380,3 +382,4 @@ void AFarmClock::PreviewMorning() { PreviewHour=6; PreviewLighting(); }
 void AFarmClock::PreviewNoon() { PreviewHour=12; PreviewLighting(); }
 void AFarmClock::PreviewSunset() { PreviewHour=18; PreviewLighting(); }
 void AFarmClock::PreviewNight() { PreviewHour=23; PreviewLighting(); }
+

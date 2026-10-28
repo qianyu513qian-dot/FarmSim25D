@@ -85,7 +85,7 @@ TSharedRef<SWidget> UFarmClockWidget::RebuildWidget()
     auto* Legend = WidgetTree->ConstructWidget<UTextBlock>();
     auto LegendFont = Legend->GetFont(); LegendFont.Size = 13; Legend->SetFont(LegendFont);
     Legend->SetColorAndOpacity(FSlateColor(FLinearColor(0.9f,0.86f,0.68f)));
-    Legend->SetText(FText::FromString(TEXT("E  Hoe     F  Plant     R  Water     H  Harvest")));
+    Legend->SetText(FText::FromString(TEXT("E  Hoe/Shop     F  Plant     R  Water     H  Harvest")));
     Tools->SetContent(Legend);
     SetVisibility(ESlateVisibility::HitTestInvisible);
     Refresh();
@@ -120,3 +120,4 @@ void UFarmClockWidget::Refresh()
         UpdateResource(CropsLabel,TEXT("CropCount"));
     }
 }
+
