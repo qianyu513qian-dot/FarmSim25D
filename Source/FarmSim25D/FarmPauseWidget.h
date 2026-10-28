@@ -96,6 +96,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Farm|Shop")
 	int32 GetEffectiveCropSellPrice() const;
 
+	/** Restaurant cook start: need CropCount>=1, deduct 1, refresh HUD. No refund on void. */
+	UFUNCTION(BlueprintCallable, Category="Farm|Restaurant")
+	static bool TryConsumeCropForCook(APawn* Pawn);
+
 	static bool CloseAnyOpenShop(UWorld* World);
 
 	static int32 GetPawnInt(APawn* Pawn, const TCHAR* Name);

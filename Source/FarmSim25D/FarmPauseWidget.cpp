@@ -595,6 +595,28 @@ bool AFarmSeedShop::TrySellCrop()
 	return true;
 }
 
+bool AFarmSeedShop::TryConsumeCropForCook(APawn* Pawn)
+{
+	if (!IsValid(Pawn)) return false;
+
+	const int32 Crops = GetPawnInt(Pawn, TEXT("CropCount"));
+	if (Crops < 1)
+	{
+		if (GEngine)
+		{
+			// 没有食材（先去地里收作物）
+			GEngine->AddOnScreenDebugMessage(-1, 2.5f, FColor::Orange,
+				ZH({0x6CA1, 0x6709, 0x98DF, 0x6750, 0xFF08, 0x5148, 0x53BB, 0x5730, 0x91CC, 0x6536, 0x4F5C, 0x7269, 0xFF09}));
+		}
+		return false;
+	}
+
+	SetPawnInt(Pawn, TEXT("CropCount"), Crops - 1);
+	CallPawnUpdateHud(Pawn);
+	return true;
+}
+
+
 bool AFarmSeedShop::CloseAnyOpenShop(UWorld* World)
 {
 	if (!World) return false;
