@@ -16,7 +16,7 @@ UE5.8 等距 / 2.5D **种田 + 模拟经营** 项目（进行中 / WIP）。
 | 引擎 | Unreal Engine **5.8** |
 | 视角 | 等距正交（Voxel Micro Farm 体素场景） |
 | 类型 | 种田模拟 + 餐厅经营 |
-| 状态 | **WIP** — 农场可玩；餐厅垂直切片已接客人/订单提示/结账并币/灶台进度/打烊日结（UMG 精修仍在路上） |
+| 状态 | **WIP** — 农场可玩；餐厅垂直切片：开业/换色客人/UMG 订单条/持菜高亮正确桌/结账进 COINS；调试色块默认关闭 |
 
 ### 一日日程（FarmClock）
 
@@ -39,7 +39,7 @@ UE5.8 等距 / 2.5D **种田 + 模拟经营** 项目（进行中 / WIP）。
 
 ### 餐厅垂直切片（南桥划区）
 
-南桥东侧码头陆地：家具已拉开摆放，头顶彩色调试块 + 英文/中文提示（开业牌 / 灶台 / 餐桌1·2 / 垃圾桶）。
+南桥东侧码头陆地：家具已拉开摆放；调试色块默认关闭，开业牌绿/红表示营业状态，订单看右上角 UMG。
 
 | 物件 | 作用 |
 |---|---|
@@ -63,14 +63,14 @@ UE5.8 等距 / 2.5D **种田 + 模拟经营** 项目（进行中 / WIP）。
 4. **错桌** → $0 离席；**耐心约 20–25s** 超时离席  
 5. 可扔垃圾桶清空手上菜  
 
-本轮已接上的体验（仍 WIP，正式 UMG 气泡/订单条继续打磨）：
+本轮已接上的体验（仍 WIP）：
 
-- 订单调试提示 + 侧边订单 Print；桌面耐心提示  
+- 右上角 UMG 订单条；桌面耐心/用餐中提示；持菜时高亮正确桌  
 - 结账并入 COINS；开业牌绿/红；**T** 跳到 17:00  
 - 灶台进度与持菜提示/模型；上菜后桌上菜  
 - 打烊黄字营收小结（`RestDayEnd`）；17:00 开业提醒  
 
-调试：家具旁彩色方块区分（青=开业牌、橙=灶台、黄/绿=餐桌、品红=垃圾桶）；走近按 E 有中文前缀 Print。
+调试色块默认关闭（Manager.bShowRestDebugLabels=false）；开业牌绿/红仍保留；订单看右上角 UMG。
 
 设计文档：[`Docs/Restaurant_Framework.md`](Docs/Restaurant_Framework.md)  
 场景内说明：[`Content/Farm/Restaurant/README.md`](Content/Farm/Restaurant/README.md)
@@ -111,7 +111,7 @@ FarmSim25D/
 
 ## English blurb
 
-**FarmSim25D** is a WIP Unreal Engine 5.8 isometric farming + restaurant sim. Daytime farming loop (till / plant / water / harvest) is in; evenings open a south-bridge restaurant vertical slice (2 tables, 2 dishes, tinted guests, cook → hold → serve → COINS pay, stove progress, close-day summary). Formal UMG polish still WIP. Not a finished game.
+**FarmSim25D** is a WIP Unreal Engine 5.8 isometric farming + restaurant sim. Daytime farming loop (till / plant / water / harvest) is in; evenings open a south-bridge restaurant vertical slice (2 tables, 2 dishes, tinted guests, cook → hold → serve → COINS pay, stove progress, close-day summary). UMG order list + held-dish table highlight in; identity debug cubes default off. Not a finished game.
 
 ---
 
