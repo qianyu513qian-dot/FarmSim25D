@@ -108,6 +108,9 @@ private:
     float HintSeconds = 0;
     bool bPausedByClock = false;
     void FinishDay();
+    void ForceCloseRestaurantForSleep();
+    void ShowLateNightForcedRestToast();
+    void DebugSkipNearEndOfDay();
     void SyncLegacyState();
     void EnsurePlotVisualCapacity();
     void PublishTime();

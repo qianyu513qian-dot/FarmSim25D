@@ -1,4 +1,5 @@
 #include "FarmClock.h"
+#include <initializer_list>
 #include "FarmClockWidget.h"
 #include "FarmPauseWidget.h"
 // AFarmSeedShop declared in FarmPauseWidget.h
@@ -20,6 +21,8 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "Camera/PlayerCameraManager.h"
 #include "UObject/UnrealType.h"
+#include "Engine/Engine.h"
+#include "EngineUtils.h"
 
 AFarmClock::AFarmClock()
 {
@@ -58,6 +61,7 @@ void AFarmClock::BeginPlay()
         InputComponent->BindKey(EKeys::B,IE_Pressed,this,&AFarmClock::SleepInput);
         auto& Pause = InputComponent->BindKey(EKeys::Escape,IE_Pressed,this,&AFarmClock::TogglePause);
         Pause.bExecuteWhenPaused = true;
+        InputComponent->BindKey(EKeys::F9,IE_Pressed,this,&AFarmClock::DebugSkipNearEndOfDay);
         if (bShowClock && PC->IsLocalController())
         {
             ClockWidget = CreateWidget<UFarmClockWidget>(PC,UFarmClockWidget::StaticClass());
@@ -202,9 +206,82 @@ bool AFarmClock::TrySleep()
 
 void AFarmClock::SleepInput() { TrySleep(); }
 
+void AFarmClock::ForceCloseRestaurantForSleep()
+{
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    // Prefer the restaurant BP class; fall back to any actor that exposes ForceCloseForSleep.
+    UClass* Cls = StaticLoadClass(
+        AActor::StaticClass(),
+        nullptr,
+        TEXT("/Game/Farm/Restaurant/BP_RestaurantManager.BP_RestaurantManager_C"));
+    if (Cls)
+    {
+        TArray<AActor*> Found;
+        UGameplayStatics::GetAllActorsOfClass(World, Cls, Found);
+        for (AActor* Actor : Found)
+        {
+            if (!IsValid(Actor)) continue;
+            if (UFunction* Fn = Actor->FindFunction(TEXT("ForceCloseForSleep")))
+            {
+                Actor->ProcessEvent(Fn, nullptr);
+            }
+        }
+        return;
+    }
+
+    for (TActorIterator<AActor> It(World); It; ++It)
+    {
+        if (UFunction* Fn = It->FindFunction(TEXT("ForceCloseForSleep")))
+        {
+            It->ProcessEvent(Fn, nullptr);
+            return;
+        }
+    }
+}
+
+void AFarmClock::ShowLateNightForcedRestToast()
+{
+    if (!GEngine) return;
+    // 太晚了，强制休息到次日
+    FString Msg;
+    Msg.AppendChar(0x592A); Msg.AppendChar(0x665A); Msg.AppendChar(0x4E86); Msg.AppendChar(0xFF0C);
+    Msg.AppendChar(0x5F3A); Msg.AppendChar(0x5236); Msg.AppendChar(0x4F11); Msg.AppendChar(0x606F);
+    Msg.AppendChar(0x5230); Msg.AppendChar(0x6B21); Msg.AppendChar(0x65E5);
+    GEngine->AddOnScreenDebugMessage(99102, 4.5f, FColor::Orange, Msg);
+}
+
+void AFarmClock::DebugSkipNearEndOfDay()
+{
+    if (bEndingDay || bClockPaused) return;
+    // Jump to ~01:50 so AdvanceClock hits 02:00 / RequestEndDay shortly (or immediately at high TimeSpeed).
+    State.Minutes = 1550.0;
+    LastDisplayMinute = INDEX_NONE;
+    SyncLegacyState();
+    ApplyLighting(float(State.Minutes / 60.0));
+    PublishTime();
+    if (ClockWidget) ClockWidget->Refresh();
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(99103, 2.5f, FColor::Cyan, TEXT("DEBUG: clock -> 01:50 (F9)"));
+    }
+}
+
 void AFarmClock::RequestEndDay()
 {
     if (bEndingDay || bClockPaused) return;
+
+    // Match bed E path: close restaurant first. ForceCloseForSleep is idempotent
+    // (no-op / hint-reset when already closed), so bed ForceClose then TrySleep is safe.
+    ForceCloseRestaurantForSleep();
+
+    const bool bLateNight = State.Minutes >= 1440.0;
+    if (bLateNight)
+    {
+        ShowLateNightForcedRestToast();
+    }
+
     bEndingDay=true; TransitionSeconds=0;
     OnDayEnding.Broadcast(State.AbsoluteDay);
     if (auto* PC=UGameplayStatics::GetPlayerController(this,0))
@@ -274,11 +351,18 @@ FText AFarmClock::GetClockText() const
 
 FText AFarmClock::GetStatusText() const
 {
-    if (bEndingDay) return FText::FromString(TEXT("Resting... a new day awaits"));
+    // Chinese / bilingual short lines for HUD (bed E, not B).
+    auto ZH = [](std::initializer_list<int32> Codes)
+    {
+        FString Out;
+        for (int32 C : Codes) Out.AppendChar(static_cast<TCHAR>(C));
+        return Out;
+    };
+    if (bEndingDay) return FText::FromString(ZH({0x4F11,0x606F,0x4E2D,0x2026,0x6B21,0x65E5,0x89C1}));
     if (bClockPaused) return FText::FromString(TEXT("Paused"));
-    if (HintSeconds>0) return FText::FromString(TEXT("Walk to the farmhouse to sleep"));
-    if (State.Minutes>=1440) return FText::FromString(TEXT("Late! Rest before 02:00"));
-    if (CanSleep()) return FText::FromString(TEXT("At home  |  B to sleep"));
+    if (HintSeconds>0) return FText::FromString(ZH({0x8BF7,0x5230,0x519C,0x820D,0x65C1,0x6309,0x20,0x45,0x20,0x7761,0x89C9}));
+    if (State.Minutes>=1440) return FText::FromString(ZH({0x592A,0x665A,0x4E86,0xFF01,0x8BF7,0x5728,0x20,0x30,0x32,0x3A,0x30,0x30,0x20,0x524D,0x7761,0x89C9}));
+    if (CanSleep()) return FText::FromString(ZH({0x519C,0x820D,0x65C1,0x20,0x7C,0x20,0x6309,0x20,0x45,0x20,0x7761,0x89C9}));
     if (State.Minutes>=1200) return FText::FromString(TEXT("Moonlit farm"));
     if (State.Minutes>=1050) return FText::FromString(TEXT("Golden evening"));
     if (State.Minutes<480) return FText::FromString(TEXT("A fresh morning"));
