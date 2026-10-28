@@ -16,7 +16,7 @@ UE5.8 等距 / 2.5D **种田 + 模拟经营** 项目（进行中 / WIP）。
 | 引擎 | Unreal Engine **5.8** |
 | 视角 | 等距正交（Voxel Micro Farm 体素场景） |
 | 类型 | 种田模拟 + 餐厅经营 |
-| 状态 | **WIP** — 农场可玩；餐厅垂直切片可测开业→做菜→上菜→给钱 |
+| 状态 | **WIP** — 农场可玩；餐厅垂直切片已接客人/订单提示/结账并币/灶台进度/打烊日结（UMG 精修仍在路上） |
 
 ### 一日日程（FarmClock）
 
@@ -43,9 +43,9 @@ UE5.8 等距 / 2.5D **种田 + 模拟经营** 项目（进行中 / WIP）。
 
 | 物件 | 作用 |
 |---|---|
-| **开业牌** | 17:00 后按 E 开业 / 可提前打烊；23:00 自动打烊 |
-| **餐桌 ×2** | 入座自动点单；正确桌上菜 → 用餐数秒 → `PAY +$` 清桌 |
-| **灶台** | E 开始做菜 → READY 后再 E 端上手 |
+| **开业牌** | 17:00 后按 E 开业 / 可提前打烊；23:00 自动打烊；牌面绿=营业 / 红=打烊 |
+| **餐桌 ×2** | 入座自动点单；正确桌上菜 → 用餐片刻 → `PAY +$` 清桌（并入左上角 COINS） |
+| **灶台** | E 开始做菜 → READY 后再 E 端上手；头顶有做菜中 / 菜好了进度提示 |
 | **垃圾桶** | 丢弃手上菜品 |
 
 菜品（MVP）：
@@ -57,11 +57,18 @@ UE5.8 等距 / 2.5D **种田 + 模拟经营** 项目（进行中 / WIP）。
 
 规则摘要：
 
-1. 开业后空桌会来客人并自动点单（Print 可见）  
-2. 灶台做对应菜 → 端手上（一次一盘）  
-3. **正确桌**上菜 → 用餐 → 给钱（记入餐厅 `RestaurantMoney`，尚未并入左上角 COINS）  
+1. 开业后空桌刷客，客人（换色 Manny）坐到椅边并自动点单  
+2. 灶台做对应菜 → 端手上（一次一盘；身前可见持菜小模型）  
+3. **正确桌**上菜 → 桌上放菜、状态「用餐中」→ 结账清桌，钱进 **COINS**  
 4. **错桌** → $0 离席；**耐心约 20–25s** 超时离席  
 5. 可扔垃圾桶清空手上菜  
+
+本轮已接上的体验（仍 WIP，正式 UMG 气泡/订单条继续打磨）：
+
+- 订单调试提示 + 侧边订单 Print；桌面耐心提示  
+- 结账并入 COINS；开业牌绿/红；**T** 跳到 17:00  
+- 灶台进度与持菜提示/模型；上菜后桌上菜  
+- 打烊黄字营收小结（`RestDayEnd`）；17:00 开业提醒  
 
 调试：家具旁彩色方块区分（青=开业牌、橙=灶台、黄/绿=餐桌、品红=垃圾桶）；走近按 E 有中文前缀 Print。
 
@@ -74,6 +81,7 @@ UE5.8 等距 / 2.5D **种田 + 模拟经营** 项目（进行中 / WIP）。
 |---|---|
 | **WASD** | 移动 |
 | **E** | 情境交互（锄地 / 开业牌 / 灶台 / 餐桌 / 垃圾桶） |
+| **T** | 跳到约 17:00（方便测餐厅） |
 | **Esc** | 暂停（若已接好 UI） |
 
 ### 美术与关卡
@@ -97,13 +105,13 @@ FarmSim25D/
 ```
 
 打开方式：用 UE 5.8 打开 `FarmSim25D.uproject` → PIE `Lvl_TopDown`。  
-测餐厅：把时间调到 ≥17:00（约 1020 分钟）→ 开业牌 E → 灶台做菜 → 正确桌上菜。
+测餐厅：按 **T** 跳到 ≥17:00（或把时间调到约 1020 分钟）→ 开业牌 E → 灶台做菜 → 正确桌上菜 → 打烊看日结。
 
 ---
 
 ## English blurb
 
-**FarmSim25D** is a WIP Unreal Engine 5.8 isometric farming + restaurant sim. Daytime farming loop (till / plant / water / harvest) is in; evenings open a south-bridge restaurant vertical slice (2 tables, 2 dishes, cook → serve → pay). Not a finished game.
+**FarmSim25D** is a WIP Unreal Engine 5.8 isometric farming + restaurant sim. Daytime farming loop (till / plant / water / harvest) is in; evenings open a south-bridge restaurant vertical slice (2 tables, 2 dishes, tinted guests, cook → hold → serve → COINS pay, stove progress, close-day summary). Formal UMG polish still WIP. Not a finished game.
 
 ---
 
