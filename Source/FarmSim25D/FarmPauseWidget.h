@@ -8,6 +8,7 @@ class AFarmClock;
 class UButton;
 class UTextBlock;
 class UStaticMeshComponent;
+class UTextRenderComponent;
 class AFarmSeedShop;
 class APawn;
 
@@ -27,7 +28,7 @@ private:
 	UFUNCTION() void OnContinueClicked();
 };
 
-/** Minimal seed shop UI (code-built, Chinese). Buy tomato seeds / close. */
+/** Seed shop UI (code-built, Chinese). Buy seeds / sell crops / close. */
 UCLASS()
 class FARMSIM25D_API UFarmShopWidget : public UUserWidget
 {
@@ -42,9 +43,11 @@ protected:
 private:
 	UPROPERTY(Transient) TObjectPtr<AFarmSeedShop> Shop;
 	UPROPERTY(Transient) TObjectPtr<UButton> BuyButton;
+	UPROPERTY(Transient) TObjectPtr<UButton> SellButton;
 	UPROPERTY(Transient) TObjectPtr<UButton> CloseButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> StatusLabel;
 	UFUNCTION() void OnBuyClicked();
+	UFUNCTION() void OnSellClicked();
 	UFUNCTION() void OnCloseClicked();
 };
 
@@ -67,6 +70,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Farm|Shop")
 	int32 SeedsPerPurchase = 1;
 
+	/** Fallback crop sell price if pawn has no TomatoSellPrice (or it is <=0). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Farm|Shop")
+	int32 CropSellPrice = 10;
+
 	UFUNCTION(BlueprintCallable, Category="Farm|Shop")
 	bool IsPlayerInRange() const;
 
@@ -82,16 +89,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Farm|Shop")
 	bool TryBuySeeds();
 
+	UFUNCTION(BlueprintCallable, Category="Farm|Shop")
+	bool TrySellCrop();
+
+	/** Resolve sell price: pawn TomatoSellPrice if >0, else CropSellPrice. */
+	UFUNCTION(BlueprintCallable, Category="Farm|Shop")
+	int32 GetEffectiveCropSellPrice() const;
+
 	static bool CloseAnyOpenShop(UWorld* World);
+
+	static int32 GetPawnInt(APawn* Pawn, const TCHAR* Name);
+	static void SetPawnInt(APawn* Pawn, const TCHAR* Name, int32 Value);
+	static void CallPawnUpdateHud(APawn* Pawn);
 
 protected:
 	UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Mesh;
+	UPROPERTY(VisibleAnywhere) TObjectPtr<UTextRenderComponent> NameLabel;
 
 private:
 	UPROPERTY(Transient) TObjectPtr<UFarmShopWidget> ShopWidget;
 	void InteractInput();
 	void ApplyShopPresentation(bool bOpen);
-	static int32 GetPawnInt(APawn* Pawn, const TCHAR* Name);
-	static void SetPawnInt(APawn* Pawn, const TCHAR* Name, int32 Value);
-	static void CallPawnUpdateHud(APawn* Pawn);
 };

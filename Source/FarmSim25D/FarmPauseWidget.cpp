@@ -109,26 +109,15 @@ void UFarmPauseWidget::OnContinueClicked()
 // ---- Seed shop (merged into this TU so Live Coding can pick it up without new cpp files) ----
 #include <initializer_list>
 #include "InputCoreTypes.h"
-#include "Components/SizeBox.h"
-#include "Components/ButtonSlot.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/TextRenderComponent.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UObject/UnrealType.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
-
-#include "Blueprint/WidgetTree.h"
-#include "Components/CanvasPanel.h"
-#include "Components/CanvasPanelSlot.h"
-#include "Components/Border.h"
-#include "Components/Button.h"
-#include "Components/ButtonSlot.h"
-#include "Components/TextBlock.h"
-#include "Components/VerticalBox.h"
-#include "Components/VerticalBoxSlot.h"
-#include "Components/SizeBox.h"
+#include "Kismet/GameplayStatics.h"
 
 static FString ZH(std::initializer_list<int32> Codes)
 {
@@ -159,11 +148,11 @@ TSharedRef<SWidget> UFarmShopWidget::RebuildWidget()
 
 	USizeBox* Box = WidgetTree->ConstructWidget<USizeBox>();
 	Box->SetWidthOverride(420.f);
-	Box->SetHeightOverride(240.f);
+	Box->SetHeightOverride(320.f);
 	auto* BoxSlot = Canvas->AddChildToCanvas(Box);
 	BoxSlot->SetAnchors(FAnchors(0.5f, 0.5f));
 	BoxSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-	BoxSlot->SetSize(FVector2D(420.f, 240.f));
+	BoxSlot->SetSize(FVector2D(420.f, 320.f));
 
 	UBorder* Panel = WidgetTree->ConstructWidget<UBorder>();
 	Panel->SetBrushColor(FLinearColor(0.06f, 0.09f, 0.05f, 0.97f));
@@ -193,7 +182,7 @@ TSharedRef<SWidget> UFarmShopWidget::RebuildWidget()
 		StatusLabel->SetColorAndOpacity(FSlateColor(FLinearColor(0.75f, 0.82f, 0.7f)));
 		StatusLabel->SetText(FText::FromString(TEXT("")));
 	}
-	Stack->AddChildToVerticalBox(StatusLabel)->SetPadding(FMargin(0.f, 0.f, 0.f, 16.f));
+	Stack->AddChildToVerticalBox(StatusLabel)->SetPadding(FMargin(0.f, 0.f, 0.f, 14.f));
 
 	auto StyleBtn = [](UButton* Btn, const FLinearColor& Normal)
 	{
@@ -204,25 +193,41 @@ TSharedRef<SWidget> UFarmShopWidget::RebuildWidget()
 		Btn->SetStyle(Style);
 	};
 
-	BuyButton = WidgetTree->ConstructWidget<UButton>();
-	StyleBtn(BuyButton, FLinearColor(0.22f, 0.48f, 0.28f, 1.f));
+	auto MakeBtnLabel = [this](UButton* Btn, const FString& Text, int32 FontSize)
 	{
 		UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>();
 		FSlateFontInfo Font = Label->GetFont();
-		Font.Size = 16;
+		Font.Size = FontSize;
 		Label->SetFont(Font);
 		Label->SetJustification(ETextJustify::Center);
 		Label->SetColorAndOpacity(FSlateColor(FLinearColor(1.f, 0.96f, 0.84f)));
-		Label->SetText(FText::FromString(ZH({0x4E70, 0x756A, 0x8304, 0x79CD, 0x5B50}) + TEXT(" -$5")));
-		BuyButton->SetContent(Label);
+		Label->SetText(FText::FromString(Text));
+		Btn->SetContent(Label);
 		if (UButtonSlot* BS = Cast<UButtonSlot>(Label->Slot))
 		{
-			BS->SetPadding(FMargin(24.f, 12.f));
+			BS->SetPadding(FMargin(24.f, 11.f));
 			BS->SetHorizontalAlignment(HAlign_Center);
 			BS->SetVerticalAlignment(VAlign_Center);
 		}
+	};
+
+	BuyButton = WidgetTree->ConstructWidget<UButton>();
+	StyleBtn(BuyButton, FLinearColor(0.22f, 0.48f, 0.28f, 1.f));
+	MakeBtnLabel(BuyButton, ZH({0x4E70, 0x756A, 0x8304, 0x79CD, 0x5B50}) + TEXT(" -$5"), 16);
+	{
+		UVerticalBoxSlot* BuySlot = Stack->AddChildToVerticalBox(BuyButton);
+		BuySlot->SetPadding(FMargin(0.f, 0.f, 0.f, 8.f));
+		BuySlot->SetHorizontalAlignment(HAlign_Center);
 	}
-	Stack->AddChildToVerticalBox(BuyButton)->SetHorizontalAlignment(HAlign_Center);
+
+	SellButton = WidgetTree->ConstructWidget<UButton>();
+	StyleBtn(SellButton, FLinearColor(0.48f, 0.36f, 0.16f, 1.f));
+	MakeBtnLabel(SellButton, ZH({0x5356, 0x4F5C, 0x7269}) + TEXT(" +$10"), 16);
+	{
+		UVerticalBoxSlot* SellSlot = Stack->AddChildToVerticalBox(SellButton);
+		SellSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 8.f));
+		SellSlot->SetHorizontalAlignment(HAlign_Center);
+	}
 
 	CloseButton = WidgetTree->ConstructWidget<UButton>();
 	StyleBtn(CloseButton, FLinearColor(0.28f, 0.28f, 0.3f, 1.f));
@@ -257,6 +262,11 @@ void UFarmShopWidget::NativeConstruct()
 		BuyButton->OnClicked.RemoveDynamic(this, &UFarmShopWidget::OnBuyClicked);
 		BuyButton->OnClicked.AddDynamic(this, &UFarmShopWidget::OnBuyClicked);
 	}
+	if (SellButton)
+	{
+		SellButton->OnClicked.RemoveDynamic(this, &UFarmShopWidget::OnSellClicked);
+		SellButton->OnClicked.AddDynamic(this, &UFarmShopWidget::OnSellClicked);
+	}
 	if (CloseButton)
 	{
 		CloseButton->OnClicked.RemoveDynamic(this, &UFarmShopWidget::OnCloseClicked);
@@ -273,11 +283,38 @@ void UFarmShopWidget::RefreshStatus()
 		StatusLabel->SetText(FText::FromString(TEXT("")));
 		return;
 	}
-	const int32 Price = Shop->SeedPrice;
+
+	APawn* Pawn = UGameplayStatics::GetPlayerPawn(Shop, 0);
+	const int32 Money = AFarmSeedShop::GetPawnInt(Pawn, TEXT("Money"));
+	const int32 Crops = AFarmSeedShop::GetPawnInt(Pawn, TEXT("CropCount"));
+	const int32 Seeds = AFarmSeedShop::GetPawnInt(Pawn, TEXT("SeedCount"));
+	const int32 SeedP = Shop->SeedPrice;
+	const int32 SellP = Shop->GetEffectiveCropSellPrice();
+
 	StatusLabel->SetText(FText::FromString(
-		ZH({0x756A, 0x8304, 0x79CD, 0x5B50}) + TEXT(" 1") +
-		ZH({0x7C92}) + TEXT(" = $") + FString::FromInt(Price) +
-		ZH({0xFF08, 0x5356, 0x51FA, 0x66F4, 0x8D35, 0xFF09})));
+		TEXT("COINS $") + FString::FromInt(Money) +
+		TEXT("  |  ") + ZH({0x4F5C, 0x7269}) + TEXT(" ") + FString::FromInt(Crops) +
+		TEXT("  |  ") + ZH({0x79CD, 0x5B50}) + TEXT(" ") + FString::FromInt(Seeds) +
+		TEXT("\n") +
+		ZH({0x4E70}) + TEXT(" -$") + FString::FromInt(SeedP) +
+		TEXT("   ") +
+		ZH({0x5356}) + TEXT(" +$") + FString::FromInt(SellP)));
+
+	// Keep button labels in sync with prices
+	if (BuyButton)
+	{
+		if (UTextBlock* L = Cast<UTextBlock>(BuyButton->GetContent()))
+		{
+			L->SetText(FText::FromString(ZH({0x4E70, 0x756A, 0x8304, 0x79CD, 0x5B50}) + TEXT(" -$") + FString::FromInt(SeedP)));
+		}
+	}
+	if (SellButton)
+	{
+		if (UTextBlock* L = Cast<UTextBlock>(SellButton->GetContent()))
+		{
+			L->SetText(FText::FromString(ZH({0x5356, 0x4F5C, 0x7269}) + TEXT(" +$") + FString::FromInt(SellP)));
+		}
+	}
 }
 
 void UFarmShopWidget::OnBuyClicked()
@@ -285,6 +322,15 @@ void UFarmShopWidget::OnBuyClicked()
 	if (IsValid(Shop))
 	{
 		Shop->TryBuySeeds();
+		RefreshStatus();
+	}
+}
+
+void UFarmShopWidget::OnSellClicked()
+{
+	if (IsValid(Shop))
+	{
+		Shop->TrySellCrop();
 		RefreshStatus();
 	}
 }
@@ -307,15 +353,6 @@ FReply UFarmShopWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyE
 	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
 }
 
-#include "UObject/ConstructorHelpers.h"
-#include "Components/StaticMeshComponent.h"
-#include "Engine/StaticMesh.h"
-#include "Kismet/GameplayStatics.h"
-#include "GameFramework/PlayerController.h"
-#include "GameFramework/Pawn.h"
-#include "UObject/UnrealType.h"
-#include "EngineUtils.h"
-
 AFarmSeedShop::AFarmSeedShop()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -332,6 +369,16 @@ AFarmSeedShop::AFarmSeedShop()
 		Mesh->SetStaticMesh(MeshFinder.Object);
 	}
 
+	NameLabel = CreateDefaultSubobject<UTextRenderComponent>(TEXT("ShopNameLabel"));
+	NameLabel->SetupAttachment(Mesh);
+	NameLabel->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
+	NameLabel->SetHorizontalAlignment(EHTA_Center);
+	NameLabel->SetVerticalAlignment(EVRTA_TextCenter);
+	NameLabel->SetWorldSize(28.f);
+	NameLabel->SetTextRenderColor(FColor(120, 220, 140));
+	NameLabel->SetText(FText::FromString(TEXT("SHOP")));
+	NameLabel->SetHiddenInGame(false);
+
 	Tags.Add(FName(TEXT("FarmShop")));
 	Tags.Add(FName(TEXT("Farm_Shop")));
 }
@@ -340,6 +387,12 @@ void AFarmSeedShop::BeginPlay()
 {
 	Super::BeginPlay();
 	SetActorLabel(TEXT("Farm_Shop"));
+	if (NameLabel)
+	{
+		// Prefer ASCII billboard so PIE does not show "Tt" for missing CJK glyphs
+		NameLabel->SetText(FText::FromString(TEXT("SHOP")));
+		NameLabel->SetWorldSize(32.f);
+	}
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
 	{
 		EnableInput(PC);
@@ -464,6 +517,14 @@ void AFarmSeedShop::CallPawnUpdateHud(APawn* Pawn)
 	}
 }
 
+int32 AFarmSeedShop::GetEffectiveCropSellPrice() const
+{
+	APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	const int32 FromPawn = GetPawnInt(Pawn, TEXT("TomatoSellPrice"));
+	if (FromPawn > 0) return FromPawn;
+	return CropSellPrice > 0 ? CropSellPrice : 10;
+}
+
 bool AFarmSeedShop::TryBuySeeds()
 {
 	APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0);
@@ -486,9 +547,6 @@ bool AFarmSeedShop::TryBuySeeds()
 	SetPawnInt(Pawn, TEXT("SeedCount"), Seeds + SeedsPerPurchase);
 	CallPawnUpdateHud(Pawn);
 
-	// Try refresh clock HUD via finding widget in viewport is hard; ProcessEvent is enough for BP HUD.
-	// ClockWidget is private; UpdateFarmHUD covers BP HUD.
-
 	if (GEngine)
 	{
 		FString Msg;
@@ -500,6 +558,38 @@ bool AFarmSeedShop::TryBuySeeds()
 		Msg += TEXT("  -$");
 		Msg += FString::FromInt(SeedPrice);
 		GEngine->AddOnScreenDebugMessage(-1, 2.5f, FColor::Green, Msg);
+	}
+	if (ShopWidget) ShopWidget->RefreshStatus();
+	return true;
+}
+
+bool AFarmSeedShop::TrySellCrop()
+{
+	APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	if (!IsValid(Pawn)) return false;
+
+	const int32 Crops = GetPawnInt(Pawn, TEXT("CropCount"));
+	if (Crops <= 0)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, ZH({0x6CA1, 0x6709, 0x4F5C, 0x7269}));
+		}
+		return false;
+	}
+
+	const int32 SellP = GetEffectiveCropSellPrice();
+	const int32 Money = GetPawnInt(Pawn, TEXT("Money"));
+	SetPawnInt(Pawn, TEXT("CropCount"), Crops - 1);
+	SetPawnInt(Pawn, TEXT("Money"), Money + SellP);
+	CallPawnUpdateHud(Pawn);
+
+	if (GEngine)
+	{
+		FString Msg = ZH({0x5356, 0x51FA, 0x4F5C, 0x7269});
+		Msg += TEXT("  +$");
+		Msg += FString::FromInt(SellP);
+		GEngine->AddOnScreenDebugMessage(-1, 2.5f, FColor::Yellow, Msg);
 	}
 	if (ShopWidget) ShopWidget->RefreshStatus();
 	return true;
@@ -519,4 +609,3 @@ bool AFarmSeedShop::CloseAnyOpenShop(UWorld* World)
 	}
 	return bClosed;
 }
-
