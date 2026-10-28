@@ -1,5 +1,6 @@
 #include "FarmClock.h"
 #include "FarmClockWidget.h"
+#include "FarmPauseWidget.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/SkyLight.h"
 #include "Engine/PointLight.h"
@@ -54,7 +55,7 @@ void AFarmClock::BeginPlay()
     {
         EnableInput(PC);
         InputComponent->BindKey(EKeys::B,IE_Pressed,this,&AFarmClock::SleepInput);
-        auto& Pause = InputComponent->BindKey(EKeys::P,IE_Pressed,this,&AFarmClock::TogglePause);
+        auto& Pause = InputComponent->BindKey(EKeys::Escape,IE_Pressed,this,&AFarmClock::TogglePause);
         Pause.bExecuteWhenPaused = true;
         if (bShowClock && PC->IsLocalController())
         {
@@ -71,6 +72,7 @@ void AFarmClock::BeginPlay()
 void AFarmClock::EndPlay(const EEndPlayReason::Type Reason)
 {
     if (ClockWidget) ClockWidget->RemoveFromParent();
+    if (PauseWidget) PauseWidget->RemoveFromParent();
     if (bPausedByClock) UGameplayStatics::SetGamePaused(this,false);
     Super::EndPlay(Reason);
 }
@@ -126,12 +128,61 @@ void AFarmClock::SetClockPaused(bool bPaused)
     if (ClockWidget) ClockWidget->Refresh();
 }
 
+void AFarmClock::ApplyPausePresentation(bool bPaused)
+{
+    if (APlayerController* PC = UGameplayStatics::GetPlayerController(this,0))
+    {
+        if (bPaused)
+        {
+            if (!PauseWidget)
+            {
+                PauseWidget = CreateWidget<UFarmPauseWidget>(PC, UFarmPauseWidget::StaticClass());
+                if (PauseWidget) PauseWidget->SetClock(this);
+            }
+            if (PauseWidget && !PauseWidget->IsInViewport())
+            {
+                PauseWidget->AddToViewport(100);
+            }
+            FInputModeUIOnly Mode;
+            if (PauseWidget) Mode.SetWidgetToFocus(PauseWidget->TakeWidget());
+            Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+            PC->SetInputMode(Mode);
+            PC->bShowMouseCursor = true;
+            PC->SetIgnoreMoveInput(true);
+            PC->SetIgnoreLookInput(true);
+        }
+        else
+        {
+            if (PauseWidget)
+            {
+                PauseWidget->RemoveFromParent();
+                PauseWidget = nullptr;
+            }
+            FInputModeGameOnly Mode;
+            PC->SetInputMode(Mode);
+            PC->bShowMouseCursor = false;
+            PC->ResetIgnoreMoveInput();
+            PC->ResetIgnoreLookInput();
+        }
+    }
+}
+
 void AFarmClock::TogglePause()
 {
     if (bEndingDay) return;
     bPausedByClock = !bPausedByClock;
     SetClockPaused(bPausedByClock);
-    UGameplayStatics::SetGamePaused(this,bPausedByClock);
+    UGameplayStatics::SetGamePaused(this, bPausedByClock);
+    ApplyPausePresentation(bPausedByClock);
+}
+
+void AFarmClock::ResumeFromPauseMenu()
+{
+    if (!bPausedByClock) return;
+    bPausedByClock = false;
+    SetClockPaused(false);
+    UGameplayStatics::SetGamePaused(this, false);
+    ApplyPausePresentation(false);
 }
 
 bool AFarmClock::CanSleep() const

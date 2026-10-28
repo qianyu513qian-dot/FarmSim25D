@@ -9,6 +9,7 @@ class ASkyLight;
 class APointLight;
 class AExponentialHeightFog;
 class UFarmClockWidget;
+class UFarmPauseWidget;
 class APostProcessVolume;
 class UMaterialParameterCollection;
 
@@ -77,6 +78,7 @@ public:
     UPROPERTY(BlueprintAssignable, Category="Farm|Events") FFarmDayChanged OnDayStarted;
 
     UFUNCTION(BlueprintCallable, Category="Farm|Time") void SetClockPaused(bool bPaused);
+    UFUNCTION(BlueprintCallable, Category="Farm|Time") void ResumeFromPauseMenu();
     UFUNCTION(BlueprintCallable, Category="Farm|Time") bool TrySleep();
     UFUNCTION(BlueprintCallable, Category="Farm|Time") void RequestEndDay();
     UFUNCTION(BlueprintCallable, Category="Farm|Time") void AdvanceClock(double RealSeconds);
@@ -99,6 +101,7 @@ public:
 
 private:
     UPROPERTY(Transient) TObjectPtr<UFarmClockWidget> ClockWidget;
+    UPROPERTY(Transient) TObjectPtr<UFarmPauseWidget> PauseWidget;
     float TransitionSeconds = 0;
     int32 LastDisplayMinute = INDEX_NONE;
     float LightingAccumulator = 0;
@@ -109,5 +112,6 @@ private:
     void EnsurePlotVisualCapacity();
     void PublishTime();
     void TogglePause();
+    void ApplyPausePresentation(bool bPaused);
     void SleepInput();
 };

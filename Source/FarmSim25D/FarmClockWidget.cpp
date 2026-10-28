@@ -45,7 +45,7 @@ TSharedRef<SWidget> UFarmClockWidget::RebuildWidget()
     Stack->AddChildToVerticalBox(DayProgress)->SetPadding(FMargin(0,2,0,8));
     StatusLabel = Text(15, FLinearColor(0.7f,0.82f,0.88f));
     auto* Help = Text(12, FLinearColor(0.56f,0.64f,0.68f));
-    Help->SetText(FText::FromString(TEXT("B  Sleep near home     P  Pause")));
+    Help->SetText(FText::FromString(TEXT("B  Sleep near home     Esc  Pause")));
 
     // One stable HUD replaces the prototype's screen prints and world-space text.
     auto* Supplies = WidgetTree->ConstructWidget<UBorder>();
