@@ -111,6 +111,7 @@ private:
     void ForceCloseRestaurantForSleep();
     void ShowLateNightForcedRestToast();
     void DebugSkipNearEndOfDay();
+    void DebugClearSave();
     void SyncLegacyState();
     void EnsurePlotVisualCapacity();
     void PublishTime();

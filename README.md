@@ -39,6 +39,7 @@ UE5.8 等距 / 2.5D **种田 + 模拟经营** 项目（进行中 / WIP）。
 5. **打烊**：提前对开业牌 E，或等到约 23:00 → 黄字 **RestDayEnd** 营收小结。
 6. **睡觉过日**：走到农舍旁 **Farm_Bed** 按 **E**（营业中会先 ForceClose）→ 次日约 **06:00**。
 - **02:00 强制过日**：不睡也会 `RequestEndDay` → `ForceCloseForSleep` → 次日 06:00；屏幕提示「太晚了，强制休息到次日」。PIE 可 **F9** 跳到约 01:50 测，或调高 `FarmClock.TimeSpeed`。
+- **本地存档（MVP）**：日结（床 E / 02:00）后写入 `FarmSim25D_Slot0`（时钟 + Money/SeedCount/CropCount）。下次 Play 自动续档；**地块状态不存**。PIE 按 **F10** 清档，或删 `Saved/SaveGames/FarmSim25D_Slot0.sav`。
 
 备注：`bShowRestDebugLabels` 默认 **false**，身份调试色块隐藏；开业牌绿/红、做菜进度、持菜桌高亮仍保留。
 

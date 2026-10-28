@@ -44,7 +44,11 @@
 | `OnDayEnding / OnDayStarted` | 日结、任务、商店等蓝图扩展事件 |
 | `CaptureClock / RestoreClock` | 读写日期/时间快照，供后续统一 SaveGame 系统使用 |
 
-`CaptureClock` 是存档接口；目前不会单独写磁盘存档，以免时钟与现有未存档的农田状态脱节。新开游戏从春 1 日 06:00 开始。
+`CaptureClock` / `RestoreClock` 已接本地 `UFarmSaveGame`（槽位 `FarmSim25D_Slot0`）。
+日结成功（床 E 或 02:00 → `FinishDay`）后自动保存：**AbsoluteDay + Minutes**，以及玩家 Pawn 上的 **Money / SeedCount / CropCount**。
+下次 PIE / 启动若槽位存在则自动 `RestoreClock` + 恢复经济，并提示「继续上次进度」；保存成功提示「已保存」。
+**MVP 限制：地块（已锄/已种/生长）不写入存档**，重进后地块视觉会回到关卡默认，只有时钟与金钱/种子/作物数量延续。
+调试：PIE 中按 **F10** 删除存档（提示「已清除存档」）；也可删 `Saved/SaveGames/FarmSim25D_Slot0.sav`。无存档时仍从第 1 天 06:00 开始。
 
 ## 后台工作流程
 

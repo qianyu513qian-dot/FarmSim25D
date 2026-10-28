@@ -2,6 +2,7 @@
 #include <initializer_list>
 #include "FarmClockWidget.h"
 #include "FarmPauseWidget.h"
+#include "FarmSaveGame.h"
 // AFarmSeedShop declared in FarmPauseWidget.h
 #include "Engine/DirectionalLight.h"
 #include "Engine/SkyLight.h"
@@ -23,6 +24,7 @@
 #include "UObject/UnrealType.h"
 #include "Engine/Engine.h"
 #include "EngineUtils.h"
+#include "TimerManager.h"
 
 AFarmClock::AFarmClock()
 {
@@ -51,8 +53,20 @@ AFarmClock::AFarmClock()
 void AFarmClock::BeginPlay()
 {
     Super::BeginPlay();
-    State.AbsoluteDay = FMath::Max(1,State.AbsoluteDay);
-    State.Minutes = FMath::Clamp(State.Minutes,360.0,1559.999);
+
+    // Auto-continue: restore clock + Money/SeedCount/CropCount from local SaveGame if present.
+    FFarmClockState LoadedClock;
+    const bool bLoadedSave = UFarmSaveGame::TryLoadToWorld(this, LoadedClock, true);
+    if (bLoadedSave)
+    {
+        State = LoadedClock;
+    }
+    else
+    {
+        State.AbsoluteDay = FMath::Max(1, State.AbsoluteDay);
+        State.Minutes = FMath::Clamp(State.Minutes, 360.0, 1559.999);
+    }
+
     if (IsValid(GridManager)) GridManager->SetActorTickEnabled(false);
     EnsurePlotVisualCapacity();
     if (auto* PC = UGameplayStatics::GetPlayerController(this,0))
@@ -62,6 +76,7 @@ void AFarmClock::BeginPlay()
         auto& Pause = InputComponent->BindKey(EKeys::Escape,IE_Pressed,this,&AFarmClock::TogglePause);
         Pause.bExecuteWhenPaused = true;
         InputComponent->BindKey(EKeys::F9,IE_Pressed,this,&AFarmClock::DebugSkipNearEndOfDay);
+        InputComponent->BindKey(EKeys::F10,IE_Pressed,this,&AFarmClock::DebugClearSave);
         if (bShowClock && PC->IsLocalController())
         {
             ClockWidget = CreateWidget<UFarmClockWidget>(PC,UFarmClockWidget::StaticClass());
@@ -69,10 +84,23 @@ void AFarmClock::BeginPlay()
             ClockWidget->AddToViewport(20);
         }
     }
+
+    // Pawn may spawn slightly after this actor; re-apply economy once more shortly after BeginPlay.
+    if (bLoadedSave)
+    {
+        FTimerHandle Unused;
+        GetWorldTimerManager().SetTimer(Unused, FTimerDelegate::CreateLambda([this]()
+        {
+            FFarmClockState Ignored;
+            UFarmSaveGame::TryLoadToWorld(this, Ignored, true, false);
+        }), 0.15f, false);
+    }
+
     SyncLegacyState();
     ApplyLighting(float(State.Minutes/60));
     PublishTime();
 }
+
 
 void AFarmClock::EndPlay(const EEndPlayReason::Type Reason)
 {
@@ -244,12 +272,24 @@ void AFarmClock::ForceCloseRestaurantForSleep()
 void AFarmClock::ShowLateNightForcedRestToast()
 {
     if (!GEngine) return;
-    // 太晚了，强制休息到次日
     FString Msg;
     Msg.AppendChar(0x592A); Msg.AppendChar(0x665A); Msg.AppendChar(0x4E86); Msg.AppendChar(0xFF0C);
     Msg.AppendChar(0x5F3A); Msg.AppendChar(0x5236); Msg.AppendChar(0x4F11); Msg.AppendChar(0x606F);
     Msg.AppendChar(0x5230); Msg.AppendChar(0x6B21); Msg.AppendChar(0x65E5);
     GEngine->AddOnScreenDebugMessage(99102, 4.5f, FColor::Orange, Msg);
+}
+
+void AFarmClock::DebugClearSave()
+{
+    const bool bOk = UFarmSaveGame::DeleteSave();
+    if (GEngine)
+    {
+        FString Msg;
+        Msg.AppendChar(0x5DF2); Msg.AppendChar(0x6E05); Msg.AppendChar(0x9664);
+        Msg.AppendChar(0x5B58); Msg.AppendChar(0x6863);
+        Msg += bOk ? TEXT(" (F10)") : TEXT(" FAIL");
+        GEngine->AddOnScreenDebugMessage(99112, 3.0f, FColor::Yellow, Msg);
+    }
 }
 
 void AFarmClock::DebugSkipNearEndOfDay()
@@ -320,6 +360,8 @@ void AFarmClock::FinishDay()
     ApplyLighting(6);
     PublishTime();
     OnDayStarted.Broadcast(State.AbsoluteDay);
+    // Persist clock + Money/SeedCount/CropCount after successful day-end (bed or 02:00).
+    UFarmSaveGame::SaveFromWorld(this, State);
 }
 
 void AFarmClock::RestoreClock(FFarmClockState SavedState)
